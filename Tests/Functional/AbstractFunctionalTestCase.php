@@ -15,12 +15,12 @@ namespace IchHabRecht\ContentDefender\Tests\Functional;
  * LICENSE file that was distributed with this source code.
  */
 
-use Nimut\TestingFramework\TestCase\FunctionalTestCase;
 use TYPO3\CMS\Core\Core\Bootstrap;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
 use TYPO3\CMS\Core\Messaging\FlashMessageService;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 
 abstract class AbstractFunctionalTestCase extends FunctionalTestCase
 {
@@ -38,13 +38,17 @@ abstract class AbstractFunctionalTestCase extends FunctionalTestCase
         'typo3conf/ext/content_defender',
     ];
 
+    /**
+     * @var bool
+     */
+    protected $runTestInSeparateProcess = true;
+
     protected function setUp()
     {
         parent::setUp();
 
-        $this->importDataSet('ntf://Database/sys_language.xml');
-
         $fixturePath = ORIGINAL_ROOT . 'typo3conf/ext/content_defender/Tests/Functional/Fixtures/Database/';
+        $this->importDataSet($fixturePath . 'sys_language.xml');
         $this->importDataSet($fixturePath . 'pages.xml');
         $this->importDataSet($fixturePath . 'tt_content.xml');
         if (!empty($GLOBALS['TCA']['pages_language_overlay'])) {
@@ -61,7 +65,7 @@ abstract class AbstractFunctionalTestCase extends FunctionalTestCase
 
     protected function assertNoProcessingErrorsInDataHandler(DataHandler $dataHandler)
     {
-        $dataHandler->printLogErrorMessages('');
+        $dataHandler->printLogErrorMessages();
         $flashMessageService = GeneralUtility::makeInstance(FlashMessageService::class);
         $flashMessageQueue = $flashMessageService->getMessageQueueByIdentifier();
 

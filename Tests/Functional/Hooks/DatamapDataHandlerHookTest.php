@@ -18,7 +18,9 @@ namespace IchHabRecht\ContentDefender\Tests\Functional\Hooks;
 require_once __DIR__ . '/../AbstractFunctionalTestCase.php';
 
 use IchHabRecht\ContentDefender\Tests\Functional\AbstractFunctionalTestCase;
+use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class DatamapDataHandlerHookTest extends AbstractFunctionalTestCase
 {
@@ -105,7 +107,23 @@ class DatamapDataHandlerHookTest extends AbstractFunctionalTestCase
         $dataHandler->process_datamap();
         $dataHandler->process_cmdmap();
 
-        $count = $this->getDatabaseConnection()->selectCount('*', 'tt_content', 'pid=3 AND colPos=0');
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tt_content');
+        $queryBuilder->getRestrictions()->removeAll();
+        $expressionBuilder = $queryBuilder->expr();
+        $count = $queryBuilder->count('uid')
+            ->from('tt_content')
+            ->where(
+                $expressionBuilder->eq(
+                    'pid',
+                    $queryBuilder->createNamedParameter(3, \PDO::PARAM_INT)
+                ),
+                $expressionBuilder->eq(
+                    'colPos',
+                    $queryBuilder->createNamedParameter(0, \PDO::PARAM_INT)
+                )
+            )
+            ->execute()
+            ->fetchColumn(0);
 
         $this->assertSame(3, $count);
     }
@@ -130,7 +148,27 @@ class DatamapDataHandlerHookTest extends AbstractFunctionalTestCase
         $dataHandler->process_datamap();
         $dataHandler->process_cmdmap();
 
-        $count = $this->getDatabaseConnection()->selectCount('*', 'tt_content', 'pid=3 AND colPos=3 AND header=\'Text & Media\'');
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tt_content');
+        $queryBuilder->getRestrictions()->removeAll();
+        $expressionBuilder = $queryBuilder->expr();
+        $count = $queryBuilder->count('uid')
+            ->from('tt_content')
+            ->where(
+                $expressionBuilder->eq(
+                    'pid',
+                    $queryBuilder->createNamedParameter(3, \PDO::PARAM_INT)
+                ),
+                $expressionBuilder->eq(
+                    'colPos',
+                    $queryBuilder->createNamedParameter(3, \PDO::PARAM_INT)
+                ),
+                $expressionBuilder->eq(
+                    'header',
+                    $queryBuilder->createNamedParameter('Text & Media', \PDO::PARAM_STR)
+                )
+            )
+            ->execute()
+            ->fetchColumn(0);
 
         $this->assertSame(0, $count);
     }
@@ -151,7 +189,27 @@ class DatamapDataHandlerHookTest extends AbstractFunctionalTestCase
         $dataHandler->process_datamap();
         $dataHandler->process_cmdmap();
 
-        $count = $this->getDatabaseConnection()->selectCount('*', 'tt_content', 'pid=3 AND colPos=3 AND header=\'New Header\'');
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tt_content');
+        $queryBuilder->getRestrictions()->removeAll();
+        $expressionBuilder = $queryBuilder->expr();
+        $count = $queryBuilder->count('uid')
+            ->from('tt_content')
+            ->where(
+                $expressionBuilder->eq(
+                    'pid',
+                    $queryBuilder->createNamedParameter(3, \PDO::PARAM_INT)
+                ),
+                $expressionBuilder->eq(
+                    'colPos',
+                    $queryBuilder->createNamedParameter(3, \PDO::PARAM_INT)
+                ),
+                $expressionBuilder->eq(
+                    'header',
+                    $queryBuilder->createNamedParameter('New Header', \PDO::PARAM_STR)
+                )
+            )
+            ->execute()
+            ->fetchColumn(0);
 
         $this->assertSame(1, $count);
     }
@@ -173,7 +231,23 @@ class DatamapDataHandlerHookTest extends AbstractFunctionalTestCase
         $dataHandler->process_datamap();
         $dataHandler->process_cmdmap();
 
-        $count = $this->getDatabaseConnection()->selectCount('*', 'tt_content', 'uid=6 AND header=\'New Header\'');
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tt_content');
+        $queryBuilder->getRestrictions()->removeAll();
+        $expressionBuilder = $queryBuilder->expr();
+        $count = $queryBuilder->count('uid')
+            ->from('tt_content')
+            ->where(
+                $expressionBuilder->eq(
+                    'uid',
+                    $queryBuilder->createNamedParameter(6, \PDO::PARAM_INT)
+                ),
+                $expressionBuilder->eq(
+                    'header',
+                    $queryBuilder->createNamedParameter('New Header', \PDO::PARAM_STR)
+                )
+            )
+            ->execute()
+            ->fetchColumn(0);
 
         $this->assertSame(1, $count);
     }

@@ -16,7 +16,7 @@ namespace IchHabRecht\ContentDefender\Tests\Unit\Repository;
  */
 
 use IchHabRecht\ContentDefender\Repository\ContentRepository;
-use Nimut\TestingFramework\TestCase\UnitTestCase;
+use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 class ContentRepositoryTest extends UnitTestCase
 {
