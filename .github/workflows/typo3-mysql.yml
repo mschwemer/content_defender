@@ -1,0 +1,85 @@
+name: Testing content_defender
+
+on:
+    push:
+        branches:
+            - '*'
+        tags:
+            - '*'
+    pull_request:
+        types: [opened, edited]
+    schedule:
+        -   cron: '*/42 6 * * *'
+
+env:
+    TYPO3_PATH_ROOT: ./.Build/public
+    typo3DatabaseHost: localhost
+    typo3DatabaseName: typo3
+    typo3DatabaseUsername: root
+    typo3DatabasePassword: password
+
+jobs:
+
+    running-tests:
+        name: 🏃 tests  with TYPO3 "${{ matrix.typo3-versions }}" and PHP ${{ matrix.php-versions }}
+        runs-on: ubuntu-18.04
+        strategy:
+            fail-fast: false
+            matrix:
+                php-versions: ['7.3', '7.2', '7.1', '7.0']
+                typo3-versions: ['^8.7', '^9.5']
+                exclude:
+                    -   php-versions: '7.1'
+                        typo3-versions: '^9.5'
+                    -   php-versions: '7.0'
+                        typo3-versions: '^9.5'
+        services:
+            mysql:
+                image: mysql:5.7
+                env:
+                    MYSQL_ALLOW_EMPTY_PASSWORD: false
+                    MYSQL_DATABASE: typo3
+                    MYSQL_ROOT_PASSWORD: password
+                ports:
+                    - 3306
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v1
+
+            -   name: Setup PHP
+                uses: shivammathur/setup-php@v1
+                with:
+                    php-version: ${{ matrix.php-versions }}
+                    extensions: fileinfo, filter, gd, hash, intl, json, mysqli, openssl, pcre, session, SPL, xml, zip, zlib
+                    coverage: none
+
+            -   name: Get composer cache directory
+                id: composer-cache
+                run: echo "::set-output name=dir::$(composer config cache-files-dir)"
+
+            -   name: Cache composer dependencies
+                uses: actions/cache@v1
+                with:
+                    path: ${{ steps.composer-cache.outputs.dir }}
+                    key: ${{ runner.os }}-${{ matrix.php-versions }}-composer-${{ hashFiles('**/composer.json') }}
+                    restore-keys: ${{ runner.os }}-${{ matrix.php-versions }}-composer-
+
+            -   name: Install Composer dependencies
+                run: composer require nimut/typo3-complete:"${{ matrix.typo3-versions }}" --no-progress --no-suggest --prefer-dist
+
+            -   name: Prepare tests
+                run: |
+                    mkdir -p .Build/public/typo3conf/ext/
+                    if [ ! -L .Build/public/typo3conf/ext/my_skeleton ]; then ln -snvf ../../../../. .Build/public/typo3conf/ext/my_skeleton; fi
+
+            -   name: Running unit tests
+                run: |
+                    if [ -d "Tests/Unit" ]; then
+                        .Build/bin/phpunit --bootstrap .Build/vendor/nimut/testing-framework/res/Configuration/UnitTestsBootstrap.php --testsuite unit;
+                    fi
+
+            -   name: Running functional tests
+                run: |
+                    if [ -d "Tests/Functional" ]; then
+                        find 'Tests/Functional' -wholename '*Test.php' | parallel --gnu 'echo; echo "Running functional test suite {}"; .Build/bin/phpunit --bootstrap .Build/vendor/nimut/testing-framework/res/Configuration/FunctionalTestsBootstrap.php {}';
+                    fi
