@@ -69,6 +69,8 @@ jobs:
 
             -   name: Prepare tests
                 run: |
+                    sudo apt-get update -q
+                    sudo apt-get install --no-install-recommends -y xvfb 
                     mkdir -p .Build/public/typo3conf/ext/
                     if [ ! -L .Build/public/typo3conf/ext/my_skeleton ]; then ln -snvf ../../../../. .Build/public/typo3conf/ext/my_skeleton; fi
 
