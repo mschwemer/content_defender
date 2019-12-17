@@ -43,7 +43,7 @@ jobs:
                 uses: shivammathur/setup-php@v1
                 with:
                     php-version: ${{ matrix.php-versions }}
-                    extensions: fileinfo, filter, gd, hash, intl, json, mysqli, openssl, pcre, session, SPL, xml, zip, zlib
+                    extensions: fileinfo, filter, gd, hash, intl, json, mbstring, mysqli, openssl, pcre, session, SPL, xml, zip, zlib
                     coverage: none
 
             -   name: Get composer cache directory
@@ -58,7 +58,9 @@ jobs:
                     restore-keys: ${{ runner.os }}-${{ matrix.php-versions }}-composer-
 
             -   name: Install Composer dependencies
-                run: composer require nimut/typo3-complete:"${{ matrix.typo3-versions }}" --no-progress --no-suggest --prefer-dist
+                run: |
+                    composer require nimut/typo3-complete:"${{ matrix.typo3-versions }}" --no-progress --no-suggest --prefer-dist
+                    git checkout composer.json
 
             -   name: Prepare tests
                 run: |
